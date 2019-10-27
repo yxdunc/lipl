@@ -1,0 +1,9 @@
+[package]
+name = "lipl"
+version = "0.1.0"
+authors = ["robin <yxdunc@users.noreply.github.com>"]
+edition = "2018"
+
+[dependencies]
+structopt = "0.3"
+cmd_lib = "0.7.8"
