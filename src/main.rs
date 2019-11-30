@@ -32,9 +32,9 @@ impl UI {
     fn new() -> UI {
         let stdout= io::stdout().into_raw_mode().unwrap();
         let backend = TermionBackend::new(stdout);
-        let terminal = Terminal::new(backend).unwrap();
+        let mut terminal = Terminal::new(backend).unwrap();
         let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
-
+        
         UI {
             terminal,
             start_time,
@@ -58,6 +58,7 @@ impl UI {
 
             Chart::default()
                 .block(Block::default().title("Chart"))
+                .style(Style::default().fg(Color::White).bg(Color::Black))
                 .x_axis(Axis::default()
                     .title("X Axis")
                     .title_style(Style::default().fg(Color::Red))
@@ -87,7 +88,7 @@ impl UI {
                 let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
                 self.append_result(current_time - self.start_time, value)
             }
-            Err(error) => { println!("NaN error: {}", error); }
+            Err(error) => { println!("NaN error: {} [{}]", error, result); }
         }
 
 //        println!("{:?}", self.cmd_result_history);
