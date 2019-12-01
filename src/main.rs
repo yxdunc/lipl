@@ -1,17 +1,21 @@
 use structopt::StructOpt;
 use std::{thread, time, io};
-use tui::widgets::{Chart, Block, Axis, Dataset, Marker, Widget, List};
+use tui::widgets::{Chart, Block, Axis, Dataset, Marker, Widget};
 
-use cmd_lib::{run_fun, FunResult};
+use cmd_lib::run_fun;
 use tui::style::{Style, Color};
 use termion::raw::{IntoRawMode, RawTerminal};
 use tui::backend::TermionBackend;
+use termion::event::Key;
 use tui::Terminal;
-use std::io::Stdout;
-use tui::widgets::canvas::Points;
-use std::borrow::BorrowMut;
-use std::ops::DerefMut;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::io::{Stdout, Stdin};
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::borrow::{Borrow, BorrowMut};
+use termion::input::{TermRead, Keys};
+use std::ops::Deref;
+use std::rc::Rc;
+use termion::{async_stdin, AsyncReader};
+use std::fmt::Error;
 
 static DEFAULT_REFRESH_RATE: f32 = 1.0;
 static ONE_BILLION: f32 = 1000000000.0;
@@ -29,19 +33,18 @@ struct UI {
 }
 
 impl UI {
-    fn new() -> UI {
+    fn new() -> Self {
         let stdout= io::stdout().into_raw_mode().unwrap();
         let backend = TermionBackend::new(stdout);
-        let mut terminal = Terminal::new(backend).unwrap();
+        let terminal = Terminal::new(backend).unwrap();
         let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
-        
+
         UI {
             terminal,
             start_time,
-            cmd_result_history: [].to_vec()
+            cmd_result_history: [].to_vec(),
         }
     }
-
     fn append_result(&mut self, time: f64, result: f64) {
         self.cmd_result_history.push((time, result));
         self.draw();
@@ -64,13 +67,19 @@ impl UI {
                     .title_style(Style::default().fg(Color::Red))
                     .style(Style::default().fg(Color::White))
                     .bounds([0.0, max_time])
-                    .labels(&["0.0", "5.0", "10.0"]))
+                    .labels(&[
+                        "0.0",
+                        &format!("{:.*}", 2, max_time / 2.0),
+                        &format!("{:.*}", 2, max_time)]))
                 .y_axis(Axis::default()
                     .title("Y Axis")
                     .title_style(Style::default().fg(Color::Red))
                     .style(Style::default().fg(Color::White))
                     .bounds([min_value, max_value])
-                    .labels(&["0.0", "5.0", "10.0"]))
+                    .labels(&[
+                        &format!("{:.*}", 2, min_value),
+                        &format!("{:.*}", 2, (max_value - min_value) / 2.0 + min_value),
+                        &format!("{:.*}", 2, max_value)]))
                 .datasets(&[Dataset::default()
                     .name("data1")
                     .marker(Marker::Braille)
@@ -90,22 +99,34 @@ impl UI {
             }
             Err(error) => { println!("NaN error: {} [{}]", error, result); }
         }
-
-//        println!("{:?}", self.cmd_result_history);
+    }
+    fn event_handler(&mut self, key: Option<Result<Key, std::io::Error>>) -> bool {
+        if let Some(k) = key {
+            match k {
+                // Exit.
+                Ok(Key::Char('q')) => return false,
+                _ => println!("Other"),
+            }
+        }
+        return true;
     }
 }
 
 fn main() {
     let args = Cli::from_args();
+    let mut last_time = 0.0;
     let refresh_rate = time::Duration::from_nanos((args.refresh_rate * ONE_BILLION) as u64);
     let mut ui = UI::new();
+    let mut keys = async_stdin().keys();
 
     loop{
-        let result = run_fun!("{}", args.command);
-        match result {
-            Ok(content) => { ui.result_handler(content); }
-            Err(error) => { println!("test error: {}", error); }
+        let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
+        if refresh_rate.as_secs_f64() < current_time - last_time {
+            let result = run_fun!("{}", args.command);
+
+            last_time = current_time;
+            result.and_then(|content| Ok(ui.result_handler(content)));
         }
-        thread::sleep(refresh_rate);
+        if !ui.event_handler(keys.next()) { break }
     }  
 }
