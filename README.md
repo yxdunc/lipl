@@ -17,6 +17,11 @@ Plot number of people in space:
 cargo run -- -n 1 'echo "curl -s http://api.open-notify.org/astros.json | jq .number" | sh'
 ```
 
+Plot load of most cpu intensive process
+```
+cargo run -- -n 0.01 "ps -eo pcpu | sort -n | tail -1" --target 10
+```
+
 Plot bitcoin price:
 ```
 cargo run -- -n 5 'curl -s https://api.coindesk.com/v1/bpi/currentprice.json | jq .bpi.EUR.rate_float'
