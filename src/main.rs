@@ -26,22 +26,26 @@ struct Cli {
     command: String,
 }
 
-struct UI {
+struct UI<'a> {
     terminal: Terminal<TermionBackend<RawTerminal<Stdout>>>,
     start_time: f64,
+    command: & 'a str,
     cmd_result_history: Vec<(f64, f64)>,
 }
 
-impl UI {
-    fn new() -> Self {
+impl <'a> UI <'a> {
+    fn new(command: & 'a str) -> Self {
         let stdout= io::stdout().into_raw_mode().unwrap();
         let backend = TermionBackend::new(stdout);
-        let terminal = Terminal::new(backend).unwrap();
+        let mut terminal = Terminal::new(backend).unwrap();
         let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
+
+        terminal.clear();
 
         UI {
             terminal,
             start_time,
+            command,
             cmd_result_history: [].to_vec(),
         }
     }
@@ -55,12 +59,13 @@ impl UI {
         let max_time = data.iter().max_by(|x, y| x.0.partial_cmp(&y.0).unwrap()).unwrap().0;
         let min_value = data.iter().min_by(|x, y| x.1.partial_cmp(&y.1).unwrap()).unwrap().1 - 10.0;
         let max_value = data.iter().max_by(|x, y| x.1.partial_cmp(&y.1).unwrap()).unwrap().1 + 10.0;
+        let command = self.command;
 
         self.terminal.draw(|mut f| {
             let size = f.size();
 
             Chart::default()
-                .block(Block::default().title("Chart"))
+                .block(Block::default().title(&format!("\"{}\"", command)))
                 .style(Style::default().fg(Color::White).bg(Color::Black))
                 .x_axis(Axis::default()
                     .title("X Axis")
@@ -89,6 +94,11 @@ impl UI {
         });
     }
 
+    fn clean_up_terminal(&mut self) {
+        self.terminal.flush();
+        self.terminal.clear();
+    }
+
     fn result_handler(&mut self, result: String) {
         let number = result.trim().parse::<f64>();
 
@@ -110,23 +120,30 @@ impl UI {
         }
         return true;
     }
+
+    fn evaluate(&mut self) {
+        let result = run_fun!("{}", self.command);
+
+        result.and_then(|content| Ok(self.result_handler(content)));
+    }
 }
 
 fn main() {
     let args = Cli::from_args();
     let mut last_time = 0.0;
     let refresh_rate = time::Duration::from_nanos((args.refresh_rate * ONE_BILLION) as u64);
-    let mut ui = UI::new();
+    let mut ui = UI::new(&args.command);
     let mut keys = async_stdin().keys();
 
     loop{
         let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
         if refresh_rate.as_secs_f64() < current_time - last_time {
-            let result = run_fun!("{}", args.command);
-
+            ui.evaluate();
             last_time = current_time;
-            result.and_then(|content| Ok(ui.result_handler(content)));
         }
-        if !ui.event_handler(keys.next()) { break }
+        if !ui.event_handler(keys.next()) {
+            ui.clean_up_terminal();
+            break
+        }
     }  
 }
