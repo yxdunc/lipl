@@ -8,7 +8,5 @@ edition = "2018"
 structopt = "0.3"
 tui = "0.6.2"
 termion = "1.5.3"
-#lbfgs = "0.2.1"
-#cmd_lib = "0.7.8"
-#cmd_lib = { git = "https://github.com/yxdunc/rust_cmd_lib", rev = "b03088c253a7cd81e3f2dfda2db12702d7dc89c1" }
-cmd_lib = {path = "/Users/robin/projects/rust_cmd_lib"}
+linreg = "0.1.3"
+cmd_lib = { git = "https://github.com/yxdunc/rust_cmd_lib", rev = "6cf978b546b6a83db437130ab489f2ae9f7edbb5" }

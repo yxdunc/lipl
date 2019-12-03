@@ -6,6 +6,7 @@ use termion::input::{TermRead, Keys};
 use std::fmt::Error;
 use app::UI;
 
+
 mod app;
 
 static ONE_BILLION: f32 = 1000000000.0;
@@ -14,6 +15,10 @@ static ONE_BILLION: f32 = 1000000000.0;
 struct Cli {
     #[structopt(short = "n", long = "refresh-rate", default_value = "1.0")]
     refresh_rate: f32,
+
+    #[structopt(short = "t", long = "target")]
+    target_result: Option<f64>,
+
     command: String,
 }
 
@@ -21,7 +26,7 @@ fn main() {
     let args = Cli::from_args();
     let mut last_time = 0.0;
     let refresh_rate = time::Duration::from_nanos((args.refresh_rate * ONE_BILLION) as u64);
-    let mut ui = UI::new(&args.command);
+    let mut ui = UI::new(&args.command, args.target_result);
     let mut keys = async_stdin().keys();
 
     loop{
