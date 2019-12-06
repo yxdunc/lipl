@@ -1,14 +1,13 @@
-use tui::widgets::{Chart, Block, Axis, Dataset, Marker, Widget};
-use std::{thread, time, io};
+use tui::widgets::{Chart, Block, Axis, Dataset, Marker, Widget, Gauge, Borders};
+use std::io;
 use cmd_lib::run_fun;
-use tui::style::{Style, Color};
-use termion::raw::{IntoRawMode, RawTerminal};
+use tui::style::{Style, Color, Modifier};
+use termion::raw::{RawTerminal, IntoRawMode};
 use tui::backend::TermionBackend;
 use termion::event::Key;
 use tui::Terminal;
-use std::io::{Stdout, Stdin};
+use std::io::Stdout;
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::borrow::{Borrow, BorrowMut};
 use linreg::linear_regression_of;
 
 pub struct UI<'a> {
@@ -63,9 +62,14 @@ impl <'a> UI <'a> {
         let command = self.command;
         let regression: (f64, f64) = linear_regression_of(data).or(Some((0.0, 0.0))).unwrap();
         let sampled_line = sample_line(regression.0, regression.1, (min_time, min_value), (max_time, max_value), 0.01);
-
+        let target = self.target;
         self.terminal.draw(|mut f| {
-            let size = f.size();
+            let mut chart_size = f.size();
+            chart_size.height = f.size().height - f.size().height / 10;
+
+            let mut gauge_size = f.size();
+            gauge_size.height = f.size().height / 10;
+            gauge_size.y = f.size().height - f.size().height / 10;
 
             Chart::default()
                 .block(Block::default().title(&format!("\"{}\" --> reg {:?}", command, regression)))
@@ -100,7 +104,17 @@ impl <'a> UI <'a> {
                         .style(Style::default().fg(Color::LightGreen))
                         .data(sampled_line.as_slice())
                 ])
-                .render(&mut f, size);
+                .render(&mut f, chart_size);
+            if let Some(target) = target {
+                    let ETA: f64 = (target - regression.1) / regression.0;
+
+                let completion_pourcentage = (max_time / ETA * 100.0) as i16;
+                Gauge::default()
+                    .block(Block::default().borders(Borders::ALL).title(&format!("Progress {}", ETA)))
+                    .style(Style::default().fg(Color::White).bg(Color::Black).modifier(Modifier::ITALIC))
+                    .percent(completion_pourcentage.max(0).min(100) as u16)
+                    .render(&mut f, gauge_size);
+            }
         });
     }
 
