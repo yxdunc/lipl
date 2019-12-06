@@ -1,10 +1,9 @@
 use structopt::StructOpt;
-use std::{thread, time, io};
 use std::time::{SystemTime, UNIX_EPOCH};
-use termion::{async_stdin, AsyncReader};
-use termion::input::{TermRead, Keys};
-use std::fmt::Error;
+use termion::async_stdin;
+use termion::input::TermRead;
 use app::UI;
+use core::time;
 
 
 mod app;
