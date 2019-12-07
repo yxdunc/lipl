@@ -50,3 +50,13 @@ cargo run -- -n 1 'echo "x=$(($(date +%s) % 30 - 15)); echo $(($x * $x * $x + $x
 ```
 cargo run -- -n 1 'echo "x=$(($(date +%s) % 30 - 15)); echo $(($x * $x + $x))" | sh'
 ```
+## Arguments
+
+### positional argument:
+
+\#1 a string containing a bash command returning a number. (ex: `ls -1 | wc -l`)
+ 
+### named arguments:
+`-n/--refresh-rate`: the refresh rate in seconds
+
+`-t/--target`: a target value that will be used to show a progress bar based on the command outputs. A simple linear regression is used.  
