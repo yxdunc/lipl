@@ -5,10 +5,11 @@ use tui::style::{Style, Color, Modifier};
 use termion::raw::{RawTerminal, IntoRawMode};
 use tui::backend::TermionBackend;
 use termion::event::Key;
-use tui::Terminal;
+use tui::{Terminal, Frame};
 use std::io::Stdout;
 use std::time::{SystemTime, UNIX_EPOCH};
 use linreg::linear_regression_of;
+use std::f64::INFINITY;
 
 pub struct UI<'a> {
     terminal: Terminal<TermionBackend<RawTerminal<Stdout>>>,
@@ -48,9 +49,97 @@ impl <'a> UI <'a> {
             cmd_result_history: [].to_vec(),
         }
     }
+
     fn append_result(&mut self, time: f64, result: f64) {
         self.cmd_result_history.push((time, result));
+        if self.cmd_result_history.len() == 100 {
+            self.cmd_result_history.remove(0);
+        }
         self.draw();
+    }
+
+    fn progress_bar(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
+                    regression: (f64, f64),
+                    min_time: f64,
+                    max_time: f64,
+                    target: Option<f64>) {
+        if let Some(target) = target {
+            let ETA: f64 = (target - regression.1) / regression.0;
+            let remaining_time = ETA - min_time;
+            let completion_percentage = (max_time / ETA * 100.0) as i16;
+            let gauge_title= &format!(
+                "Estimated time of completion: {:.*}s (remaining: {:.*}s)",
+                2, if ETA < 0.0 { INFINITY } else { ETA },
+                2, if ETA < 0.0 { INFINITY } else { (ETA - max_time).max(0.0) }
+            );
+            let mut gauge_size = frame.size();
+            gauge_size.height = frame.size().height / 10;
+            gauge_size.y = frame.size().height - frame.size().height / 10;
+            Gauge::default()
+                .block(Block::default().borders(Borders::ALL).title(gauge_title))
+                .style(Style::default().fg(Color::White).bg(Color::Black).modifier(Modifier::ITALIC))
+                .percent(completion_percentage.max(0).min(100) as u16)
+                .render(frame, gauge_size);
+        }
+    }
+
+    fn main_chart(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
+                  regression: (f64, f64),
+                  min_time: f64,
+                  max_time: f64,
+                  min_value: f64,
+                  max_value: f64,
+                  command: &str,
+                  data: &[(f64, f64)],
+                  target: Option<f64>){
+        let mut chart_size = frame.size();
+        let sampled_line = sample_line(
+            regression.0,
+            regression.1,
+            (min_time, min_value),
+            (max_time, max_value),
+            0.01
+        );
+
+        if target.is_some() {
+            chart_size.height = frame.size().height - frame.size().height / 10;
+
+        }
+
+        Chart::default()
+            .block(Block::default().title(&format!("\"{}\"", command)))
+            .style(Style::default().fg(Color::White).bg(Color::Black))
+            .x_axis(Axis::default()
+                .title("X Axis")
+                .title_style(Style::default().fg(Color::Red))
+                .style(Style::default().fg(Color::White))
+                .bounds([min_time, max_time])
+                .labels(&[
+                    &format!("{:.*}", 2, min_time),
+                    &format!("{:.*}", 2, max_time + min_time / 2.0),
+                    &format!("{:.*}", 2, max_time)]))
+            .y_axis(Axis::default()
+                .title("Y Axis")
+                .title_style(Style::default().fg(Color::Red))
+                .style(Style::default().fg(Color::White))
+                .bounds([min_value, max_value])
+                .labels(&[
+                    &format!("{:.*}", 2, min_value),
+                    &format!("{:.*}", 2, (max_value - min_value) / 2.0 + min_value),
+                    &format!("{:.*}", 2, max_value)]))
+            .datasets(&[
+                Dataset::default()
+                    .name("command result")
+                    .marker(Marker::Braille)
+                    .style(Style::default().fg(Color::Cyan))
+                    .data(data),
+                Dataset::default()
+                    .name("regression")
+                    .marker(Marker::Braille)
+                    .style(Style::default().fg(Color::LightGreen))
+                    .data(sampled_line.as_slice())
+            ])
+            .render(frame, chart_size);
     }
 
     fn draw(&mut self) {
@@ -61,60 +150,11 @@ impl <'a> UI <'a> {
         let max_value = data.iter().max_by(|x, y| x.1.partial_cmp(&y.1).unwrap()).unwrap().1 + 10.0;
         let command = self.command;
         let regression: (f64, f64) = linear_regression_of(data).or(Some((0.0, 0.0))).unwrap();
-        let sampled_line = sample_line(regression.0, regression.1, (min_time, min_value), (max_time, max_value), 0.01);
         let target = self.target;
+
         self.terminal.draw(|mut f| {
-            let mut chart_size = f.size();
-            chart_size.height = f.size().height - f.size().height / 10;
-
-            let mut gauge_size = f.size();
-            gauge_size.height = f.size().height / 10;
-            gauge_size.y = f.size().height - f.size().height / 10;
-
-            Chart::default()
-                .block(Block::default().title(&format!("\"{}\" --> reg {:?}", command, regression)))
-                .style(Style::default().fg(Color::White).bg(Color::Black))
-                .x_axis(Axis::default()
-                    .title("X Axis")
-                    .title_style(Style::default().fg(Color::Red))
-                    .style(Style::default().fg(Color::White))
-                    .bounds([0.0, max_time])
-                    .labels(&[
-                        "0.0",
-                        &format!("{:.*}", 2, max_time / 2.0),
-                        &format!("{:.*}", 2, max_time)]))
-                .y_axis(Axis::default()
-                    .title("Y Axis")
-                    .title_style(Style::default().fg(Color::Red))
-                    .style(Style::default().fg(Color::White))
-                    .bounds([min_value, max_value])
-                    .labels(&[
-                        &format!("{:.*}", 2, min_value),
-                        &format!("{:.*}", 2, (max_value - min_value) / 2.0 + min_value),
-                        &format!("{:.*}", 2, max_value)]))
-                .datasets(&[
-                    Dataset::default()
-                        .name("command result")
-                        .marker(Marker::Braille)
-                        .style(Style::default().fg(Color::Cyan))
-                        .data(data),
-                    Dataset::default()
-                        .name("regression")
-                        .marker(Marker::Braille)
-                        .style(Style::default().fg(Color::LightGreen))
-                        .data(sampled_line.as_slice())
-                ])
-                .render(&mut f, chart_size);
-            if let Some(target) = target {
-                    let ETA: f64 = (target - regression.1) / regression.0;
-
-                let completion_pourcentage = (max_time / ETA * 100.0) as i16;
-                Gauge::default()
-                    .block(Block::default().borders(Borders::ALL).title(&format!("Progress {}", ETA)))
-                    .style(Style::default().fg(Color::White).bg(Color::Black).modifier(Modifier::ITALIC))
-                    .percent(completion_pourcentage.max(0).min(100) as u16)
-                    .render(&mut f, gauge_size);
-            }
+            UI::main_chart(&mut f, regression, min_time, max_time, min_value, max_value, command, data, target);
+            UI::progress_bar(&mut f, regression, min_time, max_time, target);
         });
     }
 
