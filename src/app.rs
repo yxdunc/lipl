@@ -1,4 +1,4 @@
-use tui::widgets::{Chart, Block, Axis, Dataset, Marker, Widget, Gauge, Borders};
+use tui::widgets::{Chart, Block, Axis, Dataset, Marker, Widget, Gauge, Borders, Text, Paragraph};
 use std::io;
 use cmd_lib::run_fun;
 use tui::style::{Style, Color, Modifier};
@@ -10,6 +10,8 @@ use std::io::Stdout;
 use std::time::{SystemTime, UNIX_EPOCH};
 use linreg::linear_regression_of;
 use std::f64::INFINITY;
+use std::borrow::{Cow, Borrow};
+use tui::layout::Alignment;
 
 pub struct UI<'a> {
     terminal: Terminal<TermionBackend<RawTerminal<Stdout>>>,
@@ -17,6 +19,7 @@ pub struct UI<'a> {
     command: & 'a str,
     target: Option<f64>,
     cmd_result_history: Vec<(f64, f64)>,
+    cmd_txt_result_history: Vec<(f64, String)>,
 }
 
 fn sample_line(a: f64, b: f64, min: (f64, f64), max: (f64, f64), sample_rate: f64) -> Vec<(f64, f64)> {
@@ -47,6 +50,7 @@ impl <'a> UI <'a> {
             command,
             target,
             cmd_result_history: [].to_vec(),
+            cmd_txt_result_history: [].to_vec(),
         }
     }
 
@@ -55,7 +59,13 @@ impl <'a> UI <'a> {
         if self.cmd_result_history.len() == 100 {
             self.cmd_result_history.remove(0);
         }
-        self.draw();
+    }
+
+    fn append_txt_result(&mut self, time: f64, result: String) {
+        self.cmd_txt_result_history.push((time, result));
+        if self.cmd_txt_result_history.len() == 100 {
+            self.cmd_txt_result_history.remove(0);
+        }
     }
 
     fn progress_bar(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
@@ -80,6 +90,16 @@ impl <'a> UI <'a> {
                 .style(Style::default().fg(Color::White).bg(Color::Black).modifier(Modifier::ITALIC))
                 .percent(completion_percentage.max(0).min(100) as u16)
                 .render(frame, gauge_size);
+        }
+    }
+
+    fn text_output(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>, text_result_history: &Vec<(f64, String)>) {
+        if !text_result_history.is_empty() {
+            let last_result = text_result_history.last().unwrap();
+            Paragraph::new(vec!(Text::Raw(Cow::from(&last_result.1))).iter())
+                .block(Block::default().title(&format!("Elapsed time: {:.*} seconds", 2, last_result.0)))
+                .alignment(Alignment::Left)
+                .render(frame, frame.size());
         }
     }
 
@@ -143,6 +163,13 @@ impl <'a> UI <'a> {
     }
 
     fn draw(&mut self) {
+        if self.cmd_result_history.is_empty() {
+            let cmd_txt_result_history = &self.cmd_txt_result_history;
+            self.terminal.draw(|mut f| {
+                UI::text_output(&mut f, cmd_txt_result_history);
+            });
+            return ;
+        }
         let data = self.cmd_result_history.as_slice();
         let min_time = data.iter().min_by(|x, y| x.0.partial_cmp(&y.0).unwrap()).unwrap().0;
         let max_time = data.iter().max_by(|x, y| x.0.partial_cmp(&y.0).unwrap()).unwrap().0;
@@ -166,21 +193,28 @@ impl <'a> UI <'a> {
 
     fn result_handler(&mut self, result: String) {
         let number = result.trim().parse::<f64>();
+        let current_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs_f64();
 
         match number {
             Ok(value) => {
-                let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
-                self.append_result(current_time - self.start_time, value)
+                self.append_result(current_time - self.start_time, value);
             }
-            Err(error) => { println!("NaN error: {} [{}]", error, result); }
+            Err(error) => {
+                self.append_txt_result(current_time - self.start_time, result);
+            }
         }
+
+        self.draw();
     }
     pub fn event_handler(&mut self, key: Option<Result<Key, std::io::Error>>) -> bool {
         if let Some(k) = key {
             match k {
                 // Exit.
                 Ok(Key::Char('q')) => return false,
-                _ => println!("Other"),
+                _ => (),
             }
         }
         return true;
