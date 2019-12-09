@@ -18,6 +18,7 @@ pub struct UI<'a> {
     start_time: f64,
     command: & 'a str,
     target: Option<f64>,
+    history_len: usize,
     cmd_result_history: Vec<(f64, f64)>,
     cmd_txt_result_history: Vec<(f64, String)>,
 }
@@ -35,7 +36,7 @@ fn sample_line(a: f64, b: f64, min: (f64, f64), max: (f64, f64), sample_rate: f6
 }
 
 impl <'a> UI <'a> {
-    pub fn new(command: & 'a str, target: Option<f64>) -> Self {
+    pub fn new(command: & 'a str, target: Option<f64>, history_len: usize) -> Self {
         let stdout= io::stdout().into_raw_mode().unwrap();
         let backend = TermionBackend::new(stdout);
         let mut terminal = Terminal::new(backend).unwrap();
@@ -49,6 +50,7 @@ impl <'a> UI <'a> {
             start_time,
             command,
             target,
+            history_len,
             cmd_result_history: [].to_vec(),
             cmd_txt_result_history: [].to_vec(),
         }
@@ -56,14 +58,15 @@ impl <'a> UI <'a> {
 
     fn append_result(&mut self, time: f64, result: f64) {
         self.cmd_result_history.push((time, result));
-        if self.cmd_result_history.len() == 100 {
+        if self.cmd_result_history.len() > self.history_len {
             self.cmd_result_history.remove(0);
         }
     }
 
     fn append_txt_result(&mut self, time: f64, result: String) {
         self.cmd_txt_result_history.push((time, result));
-        if self.cmd_txt_result_history.len() == 100 {
+
+        if self.cmd_txt_result_history.len() > self.history_len {
             self.cmd_txt_result_history.remove(0);
         }
     }

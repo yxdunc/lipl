@@ -27,7 +27,9 @@ follow the same behaviour as [watch](https://en.wikipedia.org/wiki/Watch_(Unix))
 ### named arguments:
 `-n/--refresh-rate`: the refresh rate in seconds
 
-`-t/--target`: a target value that will be used to show a progress bar based on the command outputs. A simple linear regression is used.  
+`-t/--target`: a target value that will be used to show a progress bar based on the command outputs. A simple linear regression is used.
+
+`-l/--history-len`: the number of results from the given command that are stored and plotted.  
 
 ## Sample usages:
 

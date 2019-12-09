@@ -18,6 +18,9 @@ struct Cli {
     #[structopt(short = "t", long = "target")]
     target_result: Option<f64>,
 
+    #[structopt(short = "l", long = "history-len", default_value = "100")]
+    history_len: usize,
+
     command: String,
 }
 
@@ -25,7 +28,7 @@ fn main() {
     let args = Cli::from_args();
     let mut last_time = 0.0;
     let refresh_rate = time::Duration::from_nanos((args.refresh_rate * ONE_BILLION) as u64);
-    let mut ui = UI::new(&args.command, args.target_result);
+    let mut ui = UI::new(&args.command, args.target_result, args.history_len);
     let mut keys = async_stdin().keys();
 
     loop{
