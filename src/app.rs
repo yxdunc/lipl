@@ -139,7 +139,7 @@ impl <'a> UI <'a> {
                 .bounds([min_time, max_time])
                 .labels(&[
                     &format!("{:.*}", 2, min_time),
-                    &format!("{:.*}", 2, max_time + min_time / 2.0),
+                    &format!("{:.*}", 2, (max_time - min_time) / 2.0 + min_time),
                     &format!("{:.*}", 2, max_time)]))
             .y_axis(Axis::default()
                 .title("Y Axis")
