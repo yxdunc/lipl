@@ -13,6 +13,8 @@ progress. If you know that in total 1000 files will be downloaded, you can
 simply add the option `--target 1000` and a progress bar will be shown along 
 with an estimated time of completion.
 
+![main example screenshot](../media/screen_shots/polynomial.png?raw=true)
+
 ## Arguments
 
 ### positional argument:
