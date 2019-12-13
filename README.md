@@ -33,6 +33,8 @@ follow the same behaviour as [watch](https://en.wikipedia.org/wiki/Watch_(Unix))
 
 `-l/--history-len`: the number of results from the given command that are stored and plotted.  
 
+`--hide-regression-line`: hides the regression line used to get the ETA and the progress bar.
+
 ## Sample usages:
 
 Plot number of files in `/tmp`:

@@ -21,6 +21,7 @@ pub struct UI<'a> {
     history_len: usize,
     cmd_result_history: Vec<(f64, f64)>,
     cmd_txt_result_history: Vec<(f64, String)>,
+    hide_regression_line: bool,
 }
 
 fn sample_line(a: f64, b: f64, min: (f64, f64), max: (f64, f64), sample_rate: f64) -> Vec<(f64, f64)> {
@@ -36,7 +37,7 @@ fn sample_line(a: f64, b: f64, min: (f64, f64), max: (f64, f64), sample_rate: f6
 }
 
 impl <'a> UI <'a> {
-    pub fn new(command: & 'a str, target: Option<f64>, history_len: usize) -> Self {
+    pub fn new(command: & 'a str, target: Option<f64>, history_len: usize, hide_regression_line: bool) -> Self {
         let stdout= io::stdout().into_raw_mode().unwrap();
         let backend = TermionBackend::new(stdout);
         let mut terminal = Terminal::new(backend).unwrap();
@@ -53,6 +54,7 @@ impl <'a> UI <'a> {
             history_len,
             cmd_result_history: [].to_vec(),
             cmd_txt_result_history: [].to_vec(),
+            hide_regression_line,
         }
     }
 
@@ -114,15 +116,31 @@ impl <'a> UI <'a> {
                   max_value: f64,
                   command: &str,
                   data: &[(f64, f64)],
-                  target: Option<f64>){
+                  target: Option<f64>,
+                  hide_regression_line: bool){
         let mut chart_size = frame.size();
-        let sampled_line = sample_line(
-            regression.0,
-            regression.1,
-            (min_time, min_value),
-            (max_time, max_value),
-            0.01
-        );
+        let mut sampled_line: Vec<(f64, f64)> = [].to_vec();
+        let mut datasets_to_draw = vec![
+            Dataset::default()
+                .name("command result")
+                .marker(Marker::Braille)
+                .style(Style::default().fg(Color::Cyan))
+                .data(data)
+        ];
+        if !hide_regression_line {
+            sampled_line = sample_line(
+                regression.0,
+                regression.1,
+                (min_time, min_value),
+                (max_time, max_value),
+                0.01
+            );
+            datasets_to_draw.push(Dataset::default()
+                .name("regression")
+                .marker(Marker::Braille)
+                .style(Style::default().fg(Color::LightGreen))
+                .data(sampled_line.as_slice()))
+        }
 
         if target.is_some() {
             chart_size.height = frame.size().height - frame.size().height / 10;
@@ -150,18 +168,7 @@ impl <'a> UI <'a> {
                     &format!("{:.*}", 2, min_value),
                     &format!("{:.*}", 2, (max_value - min_value) / 2.0 + min_value),
                     &format!("{:.*}", 2, max_value)]))
-            .datasets(&[
-                Dataset::default()
-                    .name("command result")
-                    .marker(Marker::Braille)
-                    .style(Style::default().fg(Color::Cyan))
-                    .data(data),
-                Dataset::default()
-                    .name("regression")
-                    .marker(Marker::Braille)
-                    .style(Style::default().fg(Color::LightGreen))
-                    .data(sampled_line.as_slice())
-            ])
+            .datasets(&datasets_to_draw)
             .render(frame, chart_size);
     }
 
@@ -181,9 +188,10 @@ impl <'a> UI <'a> {
         let command = self.command;
         let regression: (f64, f64) = linear_regression_of(data).or(Some((0.0, 0.0))).unwrap();
         let target = self.target;
+        let hide_regression_line = self.hide_regression_line;
 
         self.terminal.draw(|mut f| {
-            UI::main_chart(&mut f, regression, min_time, max_time, min_value, max_value, command, data, target);
+            UI::main_chart(&mut f, regression, min_time, max_time, min_value, max_value, command, data, target, hide_regression_line);
             UI::progress_bar(&mut f, regression, min_time, max_time, target);
         });
     }
