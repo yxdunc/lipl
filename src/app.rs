@@ -225,6 +225,9 @@ impl <'a> UI <'a> {
             match k {
                 // Exit.
                 Ok(Key::Char('q')) => return false,
+                Ok(Key::Ctrl('c')) => return false,
+                Ok(Key::Ctrl('d')) => return false,
+                Ok(Key::Esc) => return false,
                 _ => (),
             }
         }
