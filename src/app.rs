@@ -1,17 +1,13 @@
-use tui::widgets::{Chart, Block, Axis, Dataset, Marker, Widget, Gauge, Borders, Text, Paragraph};
 use std::io;
 use cmd_lib::run_fun;
-use tui::style::{Style, Color, Modifier};
 use termion::raw::{RawTerminal, IntoRawMode};
 use tui::backend::TermionBackend;
 use termion::event::Key;
-use tui::{Terminal, Frame};
+use tui::Terminal;
 use std::io::Stdout;
 use std::time::{SystemTime, UNIX_EPOCH};
 use linreg::linear_regression_of;
-use std::f64::INFINITY;
-use std::borrow::{Cow, Borrow};
-use tui::layout::Alignment;
+
 use crate::widget_text_output::text_output;
 use crate::widget_progress_bar::progress_bar;
 use crate::widget_main_chart::main_chart;
@@ -34,8 +30,8 @@ impl <'a> UI <'a> {
         let mut terminal = Terminal::new(backend).unwrap();
         let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
 
-        terminal.clear();
-        terminal.hide_cursor();
+        let _ = terminal.clear();
+        let _ = terminal.hide_cursor();
 
         UI {
             terminal,
@@ -69,7 +65,7 @@ impl <'a> UI <'a> {
             let cmd_txt_result_history = &self.cmd_txt_result_history;
             self.terminal.draw(|mut f| {
                 text_output(&mut f, cmd_txt_result_history);
-            });
+            }).unwrap();
             return ;
         }
         let data = self.cmd_result_history.as_slice();
@@ -85,13 +81,13 @@ impl <'a> UI <'a> {
         self.terminal.draw(|mut f| {
             main_chart(&mut f, regression, min_time, max_time, min_value, max_value, command, data, target, hide_regression_line);
             progress_bar(&mut f, regression, min_time, max_time, target);
-        });
+        }).unwrap();
     }
 
     pub fn clean_up_terminal(&mut self) {
-        self.terminal.flush();
-        self.terminal.clear();
-        self.terminal.show_cursor();
+        let _ = self.terminal.flush();
+        let _ = self.terminal.clear();
+        let _ = self.terminal.show_cursor();
     }
 
     fn result_handler(&mut self, result: String) {
@@ -105,7 +101,7 @@ impl <'a> UI <'a> {
             Ok(value) => {
                 self.append_result(current_time - self.start_time, value);
             }
-            Err(error) => {
+            Err(_error) => {
                 self.append_txt_result(current_time - self.start_time, result);
             }
         }
@@ -130,6 +126,6 @@ impl <'a> UI <'a> {
     pub fn evaluate(&mut self) {
         let result = run_fun!("{}", self.command);
 
-        result.and_then(|content| Ok(self.result_handler(content)));
+        result.and_then(|content| Ok(self.result_handler(content))).unwrap();
     }
 }

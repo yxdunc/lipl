@@ -8,16 +8,16 @@ use tui::style::{Style, Color, Modifier};
 
 pub fn progress_bar(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
                 regression: (f64, f64),
-                min_time: f64,
+                _min_time: f64,
                 max_time: f64,
                 target: Option<f64>) {
     if let Some(target) = target {
-        let ETA: f64 = (target - regression.1) / regression.0;
-        let remaining_time = (ETA - max_time).max(0.0);
-        let completion_percentage = (max_time / ETA * 100.0) as i16;
+        let eta: f64 = (target - regression.1) / regression.0;
+        let remaining_time = (eta - max_time).max(0.0);
+        let completion_percentage = (max_time / eta * 100.0) as i16;
         let gauge_title = &format!(
             "Estimated time of completion: {:.*}s (remaining: {:.*}s)",
-            2, if remaining_time <= 0.0 { INFINITY } else { ETA },
+            2, if remaining_time <= 0.0 { INFINITY } else { eta },
             2, if remaining_time <= 0.0 { INFINITY } else { remaining_time }
         );
         let mut gauge_size = frame.size();

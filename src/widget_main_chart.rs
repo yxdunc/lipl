@@ -28,7 +28,7 @@ pub fn main_chart(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
               target: Option<f64>,
               hide_regression_line: bool){
     let mut chart_size = frame.size();
-    let mut sampled_line: Vec<(f64, f64)> = [].to_vec();
+    let sampled_line;
     let mut datasets_to_draw = vec![
         Dataset::default()
             .name("command result")
