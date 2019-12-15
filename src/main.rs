@@ -7,6 +7,9 @@ use core::time;
 
 
 mod app;
+mod widget_progress_bar;
+mod widget_main_chart;
+mod widget_text_output;
 
 static ONE_BILLION: f32 = 1000000000.0;
 
