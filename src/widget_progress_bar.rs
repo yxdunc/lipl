@@ -21,6 +21,7 @@ pub fn progress_bar(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
             2, if remaining_time <= 0.0 { INFINITY } else { remaining_time }
         );
         let mut gauge_size = frame.size();
+
         gauge_size.height = frame.size().height / 10;
         gauge_size.y = frame.size().height - frame.size().height / 10;
         Gauge::default()

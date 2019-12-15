@@ -29,11 +29,17 @@ follow the same behaviour as [watch](https://en.wikipedia.org/wiki/Watch_(Unix))
 ### named arguments:
 `-n/--refresh-rate`: the refresh rate in seconds
 
-`-t/--target`: a target value that will be used to show a progress bar based on the command outputs. A simple linear regression is used.
+`-t/--target`: a target value that will be used to show a progress bar based on
+ the command outputs. A simple linear regression is used.
 
-`-l/--history-len`: the number of results from the given command that are stored and plotted.  
+`-l/--history-len`: the number of results from the given command that are stored
+ and plotted.  
 
-`--hide-regression-line`: hides the regression line used to get the ETA and the progress bar.
+`--show-regression-line`: when true shows the regression line used to compute
+the ETA.
+
+`--show-target-line`: when true shows an horizontal representing the target
+value.
 
 ## Sample usages:
 

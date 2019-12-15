@@ -21,8 +21,11 @@ struct Cli {
     #[structopt(short = "t", long = "target")]
     target_result: Option<f64>,
 
-    #[structopt(long = "hide-regression-line")]
-    hide_regression_line: bool,
+    #[structopt(long = "show-regression-line")]
+    show_regression_line: Option<bool>,
+
+    #[structopt(long = "show-target-line")]
+    show_target_line: Option<bool>,
 
     #[structopt(short = "l", long = "history-len", default_value = "100")]
     history_len: usize,
@@ -34,7 +37,13 @@ fn main() {
     let args = Cli::from_args();
     let mut last_time = 0.0;
     let refresh_rate = time::Duration::from_nanos((args.refresh_rate * ONE_BILLION) as u64);
-    let mut ui = UI::new(&args.command, args.target_result, args.history_len, args.hide_regression_line);
+    let mut ui = UI::new(
+        &args.command,
+        args.target_result,
+        args.history_len,
+        args.show_regression_line.or(Some(true)).unwrap(),
+        args.show_target_line.or(Some(false)).unwrap()
+    );
     let mut keys = async_stdin().keys();
 
     loop{

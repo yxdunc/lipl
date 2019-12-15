@@ -5,6 +5,8 @@ use std::io::Stdout;
 use tui::widgets::{Dataset, Marker, Chart, Block, Axis, Widget};
 use tui::style::{Style, Color};
 
+const SAMPLE_RATE: f64 = 0.1;
+
 fn sample_line(a: f64, b: f64, min: (f64, f64), max: (f64, f64), sample_rate: f64) -> Vec<(f64, f64)> {
     let mut x = min.0;
     let mut sampled_line: Vec<(f64, f64)> = vec![];
@@ -18,17 +20,19 @@ fn sample_line(a: f64, b: f64, min: (f64, f64), max: (f64, f64), sample_rate: f6
 }
 
 pub fn main_chart(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
-              regression: (f64, f64),
-              min_time: f64,
-              max_time: f64,
-              min_value: f64,
-              max_value: f64,
-              command: &str,
-              data: &[(f64, f64)],
-              target: Option<f64>,
-              hide_regression_line: bool){
+                  regression: (f64, f64),
+                  min_time: f64,
+                  max_time: f64,
+                  min_value: f64,
+                  max_value: f64,
+                  command: &str,
+                  data: &[(f64, f64)],
+                  target: Option<f64>,
+                  show_regression_line: bool,
+                  show_target_line: bool){
     let mut chart_size = frame.size();
-    let sampled_line;
+    let sampled_regression_line;
+    let sampled_target_line;
     let mut datasets_to_draw = vec![
         Dataset::default()
             .name("command result")
@@ -36,23 +40,38 @@ pub fn main_chart(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
             .style(Style::default().fg(Color::Cyan))
             .data(data)
     ];
-    if !hide_regression_line {
-        sampled_line = sample_line(
+
+    if show_regression_line {
+        sampled_regression_line = sample_line(
             regression.0,
             regression.1,
             (min_time, min_value),
             (max_time, max_value),
-            0.01
+            SAMPLE_RATE
         );
         datasets_to_draw.push(Dataset::default()
             .name("regression")
             .marker(Marker::Braille)
-            .style(Style::default().fg(Color::LightGreen))
-            .data(sampled_line.as_slice()))
+            .style(Style::default().fg(Color::DarkGray))
+            .data(sampled_regression_line.as_slice()));
     }
 
     if target.is_some() {
         chart_size.height = frame.size().height - frame.size().height / 10;
+        if show_target_line {
+            sampled_target_line = sample_line(
+                0.0,
+                target.unwrap(),
+                (min_time, min_value),
+                (max_time, max_value),
+                SAMPLE_RATE,
+            );
+            datasets_to_draw.push(Dataset::default()
+                .name("target")
+                .marker(Marker::Braille)
+                .style(Style::default().fg(Color::LightGreen))
+                .data(sampled_target_line.as_slice()));
+        }
 
     }
 

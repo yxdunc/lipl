@@ -20,11 +20,12 @@ pub struct UI<'a> {
     history_len: usize,
     cmd_result_history: Vec<(f64, f64)>,
     cmd_txt_result_history: Vec<(f64, String)>,
-    hide_regression_line: bool,
+    show_regression_line: bool,
+    show_target_line: bool,
 }
 
 impl <'a> UI <'a> {
-    pub fn new(command: & 'a str, target: Option<f64>, history_len: usize, hide_regression_line: bool) -> Self {
+    pub fn new(command: & 'a str, target: Option<f64>, history_len: usize, show_regression_line: bool, show_target_line: bool) -> Self {
         let stdout= io::stdout().into_raw_mode().unwrap();
         let backend = TermionBackend::new(stdout);
         let mut terminal = Terminal::new(backend).unwrap();
@@ -41,7 +42,8 @@ impl <'a> UI <'a> {
             history_len,
             cmd_result_history: [].to_vec(),
             cmd_txt_result_history: [].to_vec(),
-            hide_regression_line,
+            show_regression_line,
+            show_target_line,
         }
     }
 
@@ -76,10 +78,11 @@ impl <'a> UI <'a> {
         let command = self.command;
         let regression: (f64, f64) = linear_regression_of(data).or(Some((0.0, 0.0))).unwrap();
         let target = self.target;
-        let hide_regression_line = self.hide_regression_line;
+        let show_regression_line = self.show_regression_line;
+        let show_target_line = self.show_target_line;
 
         self.terminal.draw(|mut f| {
-            main_chart(&mut f, regression, min_time, max_time, min_value, max_value, command, data, target, hide_regression_line);
+            main_chart(&mut f, regression, min_time, max_time, min_value, max_value, command, data, target, show_regression_line, show_target_line);
             progress_bar(&mut f, regression, min_time, max_time, target);
         }).unwrap();
     }
@@ -90,7 +93,13 @@ impl <'a> UI <'a> {
         let _ = self.terminal.show_cursor();
     }
 
-    fn result_handler(&mut self, result: String) {
+    pub fn evaluate(&mut self) {
+        let result = run_fun!("{}", self.command);
+
+        result.and_then(|content| Ok(self.result_handler(content))).unwrap();
+    }
+
+    pub fn result_handler(&mut self, result: String) {
         let number = result.trim().parse::<f64>();
         let current_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -121,11 +130,5 @@ impl <'a> UI <'a> {
             }
         }
         return true;
-    }
-
-    pub fn evaluate(&mut self) {
-        let result = run_fun!("{}", self.command);
-
-        result.and_then(|content| Ok(self.result_handler(content))).unwrap();
     }
 }
