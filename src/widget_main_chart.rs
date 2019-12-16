@@ -4,20 +4,9 @@ use termion::raw::RawTerminal;
 use std::io::Stdout;
 use tui::widgets::{Dataset, Marker, Chart, Block, Axis, Widget};
 use tui::style::{Style, Color};
+use crate::plotting_utils::sample_line;
 
-const SAMPLE_RATE: f64 = 0.1;
-
-fn sample_line(a: f64, b: f64, min: (f64, f64), max: (f64, f64), sample_rate: f64) -> Vec<(f64, f64)> {
-    let mut x = min.0;
-    let mut sampled_line: Vec<(f64, f64)> = vec![];
-
-    while x < max.0 {
-        x += sample_rate;
-        sampled_line.push((x, a * x + b));
-    }
-
-    sampled_line
-}
+const SAMPLE_RATE: f64 = 0.01;
 
 pub fn main_chart(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
                   regression: (f64, f64),

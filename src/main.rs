@@ -7,6 +7,7 @@ use core::time;
 
 
 mod app;
+mod plotting_utils;
 mod widget_progress_bar;
 mod widget_main_chart;
 mod widget_text_output;
