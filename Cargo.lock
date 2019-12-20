@@ -54,7 +54,7 @@ dependencies = [
 [[package]]
 name = "cmd_lib"
 version = "0.7.8"
-source = "git+https://github.com/yxdunc/rust_cmd_lib?rev=6cf978b546b6a83db437130ab489f2ae9f7edbb5#6cf978b546b6a83db437130ab489f2ae9f7edbb5"
+source = "git+https://github.com/rust-shell-script/rust_cmd_lib?rev=9f9cba4b36cdff5f7d7495d998923f1b378cb9c2#9f9cba4b36cdff5f7d7495d998923f1b378cb9c2"
 
 [[package]]
 name = "either"
@@ -94,7 +94,7 @@ dependencies = [
 name = "lipl"
 version = "0.1.0"
 dependencies = [
- "cmd_lib 0.7.8 (git+https://github.com/yxdunc/rust_cmd_lib?rev=6cf978b546b6a83db437130ab489f2ae9f7edbb5)",
+ "cmd_lib 0.7.8 (git+https://github.com/rust-shell-script/rust_cmd_lib?rev=9f9cba4b36cdff5f7d7495d998923f1b378cb9c2)",
  "linreg 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "structopt 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "termion 1.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -278,7 +278,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum cassowary 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "df8670b8c7b9dae1793364eafadf7239c40d669904660c5960d74cfd80b46a53"
 "checksum cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)" = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 "checksum clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5067f5bb2d80ef5d68b4c87db81601f0b75bca627bc2ef76b141d7b846a3c6d9"
-"checksum cmd_lib 0.7.8 (git+https://github.com/yxdunc/rust_cmd_lib?rev=6cf978b546b6a83db437130ab489f2ae9f7edbb5)" = "<none>"
+"checksum cmd_lib 0.7.8 (git+https://github.com/rust-shell-script/rust_cmd_lib?rev=9f9cba4b36cdff5f7d7495d998923f1b378cb9c2)" = "<none>"
 "checksum either 1.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "bb1f6b1ce1c140482ea30ddd3335fc0024ac7ee112895426e0a629a6c20adfe3"
 "checksum heck 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "20564e78d53d2bb135c343b3f47714a56af2061f1c928fdb541dc7b9fdd94205"
 "checksum itertools 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "87fa75c9dea7b07be3138c49abbb83fd4bea199b5cdc76f9804458edc5da0d6e"
