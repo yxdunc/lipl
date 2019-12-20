@@ -38,7 +38,7 @@ follow the same behaviour as [watch](https://en.wikipedia.org/wiki/Watch_(Unix))
 `--show-regression-line`: when true shows the regression line used to compute
 the ETA.
 
-`--show-target-line`: when true shows an horizontal representing the target
+`--show-target-line`: when true shows an horizontal line representing the target
 value.
 
 ## Sample usages:
