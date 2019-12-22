@@ -5,7 +5,7 @@ use tui::backend::TermionBackend;
 use termion::event::Key;
 use tui::Terminal;
 use std::io::Stdout;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::Instant;
 use linreg::linear_regression_of;
 
 use crate::widget_text_output::text_output;
@@ -14,7 +14,7 @@ use crate::widget_main_chart::main_chart;
 
 pub struct UI<'a> {
     terminal: Terminal<TermionBackend<RawTerminal<Stdout>>>,
-    start_time: f64,
+    start_time: Instant,
     command: & 'a str,
     target: Option<f64>,
     history_len: usize,
@@ -29,7 +29,7 @@ impl <'a> UI <'a> {
         let stdout= io::stdout().into_raw_mode().unwrap();
         let backend = TermionBackend::new(stdout);
         let mut terminal = Terminal::new(backend).unwrap();
-        let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
+        let start_time = Instant::now();
 
         let _ = terminal.clear();
         let _ = terminal.hide_cursor();
@@ -101,17 +101,14 @@ impl <'a> UI <'a> {
 
     pub fn result_handler(&mut self, result: String) {
         let number = result.trim().parse::<f64>();
-        let current_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs_f64();
+        let elapsed_seconds = (Instant::now() - self.start_time).as_secs_f64();
 
         match number {
             Ok(value) => {
-                self.append_result(current_time - self.start_time, value);
+                self.append_result(elapsed_seconds, value);
             }
             Err(_error) => {
-                self.append_txt_result(current_time - self.start_time, result);
+                self.append_txt_result(elapsed_seconds, result);
             }
         }
 
