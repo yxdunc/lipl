@@ -45,12 +45,12 @@ pub fn main_chart(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
             .data(sampled_regression_line.as_slice()));
     }
 
-    if target.is_some() {
+    if let Some(target) = target {
         chart_size.height = frame.size().height - frame.size().height / 10;
         if show_target_line {
             sampled_target_line = sample_line(
                 0.0,
-                target.unwrap(),
+                target,
                 (min_time, min_value),
                 (max_time, max_value),
                 SAMPLE_RATE,
