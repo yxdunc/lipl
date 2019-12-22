@@ -66,7 +66,7 @@ pub fn main_chart(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
 
     Chart::default()
         .block(Block::default().title(&format!("\"{}\"", command)))
-        .style(Style::default().fg(Color::White).bg(Color::Black))
+        .style(Style::default().fg(Color::White))
         .x_axis(Axis::default()
             .title("X Axis")
             .title_style(Style::default().fg(Color::Red))
