@@ -3,3 +3,6 @@
 
 # intellij
 .idea
+
+# vscode
+.vscode
