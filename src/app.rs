@@ -76,7 +76,7 @@ impl <'a> UI <'a> {
         let min_value = data.iter().min_by(|x, y| x.1.partial_cmp(&y.1).unwrap()).unwrap().1 - 10.0;
         let max_value = data.iter().max_by(|x, y| x.1.partial_cmp(&y.1).unwrap()).unwrap().1 + 10.0;
         let command = self.command;
-        let regression: (f64, f64) = linear_regression_of(data).or(Some((0.0, 0.0))).unwrap();
+        let regression: (f64, f64) = linear_regression_of(data).unwrap_or_default();
         let target = self.target;
         let show_regression_line = self.show_regression_line;
         let show_target_line = self.show_target_line;
