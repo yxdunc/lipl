@@ -22,11 +22,11 @@ struct Cli {
     #[structopt(short = "t", long = "target")]
     target_result: Option<f64>,
 
-    #[structopt(long = "show-regression-line")]
-    show_regression_line: Option<bool>,
+    #[structopt(long = "show-regression-line", parse(try_from_str), default_value = "true")]
+    show_regression_line: bool,
 
     #[structopt(long = "show-target-line")]
-    show_target_line: Option<bool>,
+    show_target_line: bool,
 
     #[structopt(short = "l", long = "history-len", default_value = "100")]
     history_len: usize,
@@ -42,8 +42,8 @@ fn main() {
         &args.command,
         args.target_result,
         args.history_len,
-        args.show_regression_line.or(Some(true)).unwrap(),
-        args.show_target_line.or(Some(false)).unwrap()
+        args.show_regression_line,
+        args.show_target_line
     );
     let mut keys = async_stdin().keys();
 
@@ -57,5 +57,5 @@ fn main() {
             ui.clean_up_terminal();
             break
         }
-    }  
+    }
 }
