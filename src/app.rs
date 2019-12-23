@@ -81,6 +81,8 @@ impl <'a> UI <'a> {
         let show_regression_line = self.show_regression_line;
         let show_target_line = self.show_target_line;
 
+
+
         self.terminal.draw(|mut f| {
             main_chart(&mut f, regression, min_time, max_time, min_value, max_value, command, data, target, show_regression_line, show_target_line);
             progress_bar(&mut f, regression, min_time, max_time, target);
@@ -94,9 +96,9 @@ impl <'a> UI <'a> {
     }
 
     pub fn evaluate(&mut self) {
-        let result = run_fun!("{}", self.command);
-
-        result.and_then(|content| Ok(self.result_handler(content))).unwrap();
+        if let Ok(result) = run_fun!("{}", self.command) {
+            self.result_handler(result);
+        }
     }
 
     pub fn result_handler(&mut self, result: String) {
@@ -129,6 +131,7 @@ impl <'a> UI <'a> {
                 _ => (),
             }
         }
-        return true;
+
+        true
     }
 }
