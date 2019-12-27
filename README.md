@@ -1,6 +1,6 @@
 # LIve PLot
-[![Actions Status](https://github.com/yxdunc/lipl/workflows/Rust/badge.svg)](https://github.com/yxdunc/lipl/actions)
-
+[![Actions Status](https://github.com/yxdunc/lipl/workflows/Tests_OSX/badge.svg)](https://github.com/yxdunc/lipl/actions)
+[![Actions Status](https://github.com/yxdunc/lipl/workflows/Tests_Linux/badge.svg)](https://github.com/yxdunc/lipl/actions)
 
 lipl is a command line tool that is similar to [watch](https://en.wikipedia.org/wiki/Watch_(Unix)) but has extended functions for commands outputing a number.
 
