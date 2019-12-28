@@ -6,11 +6,12 @@ use termion::event::Key;
 use tui::Terminal;
 use std::io::Stdout;
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::ops::Range;
 use linreg::linear_regression_of;
 
 use crate::widget_text_output::text_output;
 use crate::widget_progress_bar::progress_bar;
-use crate::widget_main_chart::main_chart;
+use crate::widget_main_chart;
 
 pub struct UI<'a> {
     terminal: Terminal<TermionBackend<RawTerminal<Stdout>>>,
@@ -71,10 +72,14 @@ impl <'a> UI <'a> {
             return ;
         }
         let data = self.cmd_result_history.as_slice();
-        let min_time = data.iter().min_by(|x, y| x.0.partial_cmp(&y.0).unwrap()).unwrap().0;
-        let max_time = data.iter().max_by(|x, y| x.0.partial_cmp(&y.0).unwrap()).unwrap().0;
-        let min_value = data.iter().min_by(|x, y| x.1.partial_cmp(&y.1).unwrap()).unwrap().1 - 10.0;
-        let max_value = data.iter().max_by(|x, y| x.1.partial_cmp(&y.1).unwrap()).unwrap().1 + 10.0;
+        let time_bounds =  &Range {
+            start: data.iter().min_by(|x, y| x.0.partial_cmp(&y.0).unwrap()).unwrap().0,
+            end: data.iter().max_by(|x, y| x.0.partial_cmp(&y.0).unwrap()).unwrap().0,
+        };
+        let value_bounds = &Range {
+            start: data.iter().min_by(|x, y| x.1.partial_cmp(&y.1).unwrap()).unwrap().1 - 10.0,
+            end: data.iter().max_by(|x, y| x.1.partial_cmp(&y.1).unwrap()).unwrap().1 + 10.0,
+        };
         let command = self.command;
         let regression: (f64, f64) = linear_regression_of(data).unwrap_or_default();
         let target = self.target;
@@ -84,8 +89,20 @@ impl <'a> UI <'a> {
 
 
         self.terminal.draw(|mut f| {
-            main_chart(&mut f, regression, min_time, max_time, min_value, max_value, command, data, target, show_regression_line, show_target_line);
-            progress_bar(&mut f, regression, min_time, max_time, target);
+            widget_main_chart::main_chart(
+                &mut f,
+                data,
+                regression,
+                time_bounds,
+                value_bounds,
+                widget_main_chart::UserParams {
+                    command,
+                    target,
+                    show_regression_line,
+                    show_target_line,
+                }
+            );
+            progress_bar(&mut f, regression, time_bounds, target);
         }).unwrap();
     }
 
