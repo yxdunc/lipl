@@ -1,0 +1,55 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  publish:
+    name: Publishing for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        rust: [stable]
+        include:
+          - os: macos-latest
+            artifact_prefix: macos
+            target: x86_64-apple-darwin
+          - os: ubuntu-latest
+            artifact_prefix: linux
+            target: x86_64-unknown-linux-gnu
+
+    steps:
+      - name: Installing Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - name: Checking out sources
+        uses: actions/checkout@v1
+      - name: Running cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          toolchain: ${{ matrix.rust }}
+          args: --release --target ${{ matrix.target }}
+
+      - name: Packaging final binary
+        shell: bash
+        run: |
+          cd target/${{ matrix.target }}/release
+          strip lipl
+          tar czvf lipl-${{ matrix.artifact_prefix }}.tar.gz lipl
+          shasum -a 256 lipl-${{ matrix.artifact_prefix }}.tar.gz > lipl-${{ matrix.artifact_prefix }}.sha256
+      - name: Releasing assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            target/${{ matrix.target }}/release/lipl-${{ matrix.artifact_prefix }}.tar.gz
+            target/${{ matrix.target }}/release/lipl-${{ matrix.artifact_prefix }}.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
