@@ -21,11 +21,10 @@ with an estimated time of completion.
 
 ## Install
 
-### homebrew (osx)
+### homebrew ([osx](https://brew.sh/) & [linux](https://docs.brew.sh/Homebrew-on-Linux))
 
 ```
-brew tap yxdunc/tools
-brew install lipl
+brew install yxdunc/tools/lipl
 ```
 
 ## Arguments
