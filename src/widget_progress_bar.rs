@@ -22,8 +22,14 @@ pub fn progress_bar(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
         );
         let mut gauge_size = frame.size();
 
-        gauge_size.height = frame.size().height / 10;
-        gauge_size.y = frame.size().height - frame.size().height / 10;
+        if frame.size().height <= 4 {
+            gauge_size.height = frame.size().height;
+            gauge_size.y = 0;
+        } else {
+            gauge_size.height = 4;
+            gauge_size.y = frame.size().height - 4;
+        }
+        
         Gauge::default()
             .block(Block::default().borders(Borders::ALL).title(gauge_title))
             .style(Style::default().fg(Color::White).bg(Color::Black).modifier(Modifier::ITALIC))

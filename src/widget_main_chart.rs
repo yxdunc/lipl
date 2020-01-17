@@ -6,6 +6,7 @@ use tui::widgets::{Dataset, Marker, Chart, Block, Axis, Widget};
 use tui::style::{Style, Color};
 use crate::plotting_utils::sample_line;
 use std::ops::Range;
+use std::cmp::max;
 
 const SAMPLE_RATE: f64 = 0.01;
 
@@ -50,7 +51,11 @@ pub fn main_chart(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
     }
 
     if let Some(target) = user_params.target {
-        chart_size.height = frame.size().height - frame.size().height / 10;
+        if frame.size().height <= 4 {
+            chart_size.height = 0;
+        } else {
+            chart_size.height = frame.size().height - 4;
+        }
         if user_params.show_target_line {
             sampled_target_line = sample_line(
                 0.0,
