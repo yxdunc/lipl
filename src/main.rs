@@ -1,9 +1,9 @@
 use structopt::StructOpt;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{cmp, thread};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use termion::async_stdin;
 use termion::input::TermRead;
 use app::UI;
-use core::time;
 
 
 mod app;
@@ -13,6 +13,7 @@ mod widget_main_chart;
 mod widget_text_output;
 
 static ONE_BILLION: f32 = 1_000_000_000.0;
+const ONE_SECOND: Duration = Duration::from_secs(1);
 
 #[derive(StructOpt)]
 struct Cli {
@@ -37,7 +38,7 @@ struct Cli {
 fn main() {
     let args = Cli::from_args();
     let mut last_time = 0.0;
-    let refresh_rate = time::Duration::from_nanos((args.refresh_rate * ONE_BILLION) as u64);
+    let refresh_rate = Duration::from_nanos((args.refresh_rate * ONE_BILLION) as u64);
     let mut ui = UI::new(
         &args.command,
         args.target_result,
@@ -46,8 +47,9 @@ fn main() {
         args.show_target_line.or(Some(false)).unwrap()
     );
     let mut keys = async_stdin().keys();
+    let sleep_time = cmp::min(refresh_rate, ONE_SECOND);
 
-    loop{
+    loop {
         let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
         if refresh_rate.as_secs_f64() < current_time - last_time {
             ui.evaluate();
@@ -57,5 +59,6 @@ fn main() {
             ui.clean_up_terminal();
             break
         }
-    }  
+        thread::sleep(sleep_time);
+    }
 }
