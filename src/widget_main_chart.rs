@@ -92,7 +92,7 @@ pub fn main_chart(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
             .bounds([value_bounds.start, value_bounds.end])
             .labels(&[
                 &format!("{:.*}", 2, value_bounds.start),
-                &format!("{:.*}", 2, (value_bounds.end - value_bounds.start) / 2.0 + value_bounds.end),
+                &format!("{:.*}", 2, (value_bounds.end - value_bounds.start) / 2.0 + value_bounds.start),
                 &format!("{:.*}", 2, value_bounds.end)]))
         .datasets(&datasets_to_draw)
         .render(frame, chart_size);
