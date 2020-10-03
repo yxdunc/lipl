@@ -27,6 +27,14 @@ with an estimated time of completion.
 brew install yxdunc/tools/lipl
 ```
 
+### aur ([arch linux](https://aur.archlinux.org/))
+
+`lipl` can be installed from available [AUR packages](https://aur.archlinux.org/packages/?O=0&SeB=b&K=lipl&outdated=&SB=n&SO=a&PP=50&do_Search=Go) using an [AUR helper](https://wiki.archlinux.org/index.php/AUR_helpers). For example,
+
+```
+yay -S lipl
+```
+
 ## Arguments
 
 ### positional argument:
