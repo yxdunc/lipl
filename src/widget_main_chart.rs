@@ -6,7 +6,6 @@ use tui::widgets::{Dataset, Marker, Chart, Block, Axis, Widget};
 use tui::style::{Style, Color};
 use crate::plotting_utils::sample_line;
 use std::ops::Range;
-use std::cmp::max;
 
 const SAMPLE_RATE: f64 = 0.01;
 
