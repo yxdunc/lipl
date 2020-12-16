@@ -1,10 +1,9 @@
 use structopt::StructOpt;
-use std::{cmp, thread};
+use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use termion::async_stdin;
 use termion::input::TermRead;
 use app::UI;
-
 
 mod app;
 mod plotting_utils;
@@ -13,7 +12,6 @@ mod widget_main_chart;
 mod widget_text_output;
 
 static ONE_BILLION: f32 = 1_000_000_000.0;
-const ONE_SECOND: Duration = Duration::from_secs(1);
 const EVENT_TICK: Duration = Duration::from_millis(20);
 
 #[derive(StructOpt)]
@@ -56,11 +54,11 @@ fn main() {
         while refresh_rate.as_secs_f64() > current_time - last_time {
             current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
             if !ui.event_handler(keys.next()) {
-                ui.clean_up_terminal();
                 exit = true;
                 break
             }
             thread::sleep(EVENT_TICK);
         }
     }
+    ui.clean_up_terminal();
 }
