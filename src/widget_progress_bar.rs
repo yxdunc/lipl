@@ -29,7 +29,7 @@ pub fn progress_bar(frame: &mut Frame<TermionBackend<RawTerminal<Stdout>>>,
             gauge_size.height = 4;
             gauge_size.y = frame.size().height - 4;
         }
-        
+
         Gauge::default()
             .block(Block::default().borders(Borders::ALL).title(gauge_title))
             .style(Style::default().fg(Color::White).bg(Color::Black).modifier(Modifier::ITALIC))

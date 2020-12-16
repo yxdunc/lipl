@@ -14,6 +14,7 @@ mod widget_text_output;
 
 static ONE_BILLION: f32 = 1_000_000_000.0;
 const ONE_SECOND: Duration = Duration::from_secs(1);
+const EVENT_TICK: Duration = Duration::from_millis(20);
 
 #[derive(StructOpt)]
 struct Cli {
@@ -37,7 +38,6 @@ struct Cli {
 
 fn main() {
     let args = Cli::from_args();
-    let mut last_time = 0.0;
     let refresh_rate = Duration::from_nanos((args.refresh_rate * ONE_BILLION) as u64);
     let mut ui = UI::new(
         &args.command,
@@ -47,18 +47,20 @@ fn main() {
         args.show_target_line.or(Some(false)).unwrap()
     );
     let mut keys = async_stdin().keys();
-    let sleep_time = cmp::min(refresh_rate, ONE_SECOND);
+    let mut exit = false;
 
-    loop {
-        let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
-        if refresh_rate.as_secs_f64() < current_time - last_time {
-            ui.evaluate();
-            last_time = current_time;
+    while !exit {
+        ui.evaluate();
+        let mut current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
+        let last_time = current_time;
+        while refresh_rate.as_secs_f64() > current_time - last_time {
+            current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
+            if !ui.event_handler(keys.next()) {
+                ui.clean_up_terminal();
+                exit = true;
+                break
+            }
+            thread::sleep(EVENT_TICK);
         }
-        if !ui.event_handler(keys.next()) {
-            ui.clean_up_terminal();
-            break
-        }
-        thread::sleep(sleep_time);
     }
 }
