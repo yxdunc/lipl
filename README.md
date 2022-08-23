@@ -1,4 +1,5 @@
 # LIve PLot
+[![Latest version](https://img.shields.io/crates/v/lipl.svg)](https://crates.io/crates/lipl)
 [![Actions Status](https://github.com/yxdunc/lipl/workflows/Tests_OSX/badge.svg)](https://github.com/yxdunc/lipl/actions)
 [![Actions Status](https://github.com/yxdunc/lipl/workflows/Tests_Linux/badge.svg)](https://github.com/yxdunc/lipl/actions)
 [![Actions Status](https://github.com/yxdunc/lipl/workflows/Clippy%20check/badge.svg)](https://github.com/yxdunc/lipl/actions)
