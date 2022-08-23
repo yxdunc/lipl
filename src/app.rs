@@ -113,7 +113,7 @@ impl <'a> UI <'a> {
     }
 
     pub fn evaluate(&mut self) {
-        let command = self.command.clone();
+        let command = self.command;
         if let Ok(result) = run_fun!(bash -c $command) {
             self.result_handler(result);
         }
